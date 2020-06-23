@@ -1,6 +1,7 @@
 /// Functions that approximate the Ei(x), the "Exponential Integral".
 
 use super::consts;
+use super::e1;
 use std::f64;
 
 /// Uses standard converging series, see [here](https://en.wikipedia.org/wiki/Exponential_integral#Convergent_series)
@@ -118,4 +119,19 @@ pub fn continued_fraction(x:f64, max_n:u64) -> f64{
 }
 
 
+/// Uses Allen and Hastings approximation, see [here](https://en.wikipedia.org/wiki/Exponential_integral#Approximations)
+/// see "Analytical approximation" by Allen, and "Approximation for Digital Computers" by Hastings
+/// the approximation I can't get access to.
+/// innaccurate compared to others, but does not rely on iteration of any sort.
+/// # Arguments
+/// * `x` - the x in Ei(x)
+///
+/// # Examples
+/// ```
+/// let ei = allen_hastings(23.0);
+/// ```
+pub fn allen_hastings(x:f64) -> f64{
+    //Ei(x) = -E1(-x)
+    -e1::allen_hastings(-x)
+}
 
