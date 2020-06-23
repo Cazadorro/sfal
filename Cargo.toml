@@ -10,3 +10,4 @@ keywords    = ["math"]
 
 [dependencies]
 num = "*"
+thiserror = "*"

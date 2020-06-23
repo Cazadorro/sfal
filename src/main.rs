@@ -10,9 +10,12 @@ use std::f64;
 use std::ops;
 use num::complex::{Complex32,Complex64};
 mod consts;
+mod errors;
 mod cheb;
 mod ei;
 mod e1;
+mod erf;
+
 
 fn erf_0(x: f32) -> f32 {
     let x = x.abs();
@@ -113,6 +116,7 @@ fn main() {
         ei_swamee[i] = ei::convergent_ramanujan(x, 64);
     }
 
+
     println!("{:#?}", eix_array);
     println!("{:#?}", ei_array);
     println!("{:#?}", ei_cheb_array);
@@ -127,7 +131,6 @@ fn main() {
     println!("{:#?}", e1_continued_16);
     println!("{:#?}", ei::convergent_ramanujan(2.0, 28));
     println!("{:#?}", ei::convergent_ramanujan(5.0, 28));
-    println!("{:#?}", -E1_Barry_et_al2( Complex64::from(-0.1)));
     println!("{:#?}", ei_large_small);
     println!("{:#?}", ei_small);
     println!("{:#?}", ei_large);
@@ -141,6 +144,33 @@ fn main() {
     println!("{:#?}", e1_swamee);
     println!("{:#?}", ei_swamee);
     println!("{:#?}", ei_swamee2);
+
+
+    let node_count = 16_u64;
+    let positive = cheb::gen_chebyshev_approximator(10.0,100.0,node_count,(|x| ei::convergent_ramanujan(x, 1024)));
+    let negative = cheb::gen_chebyshev_approximator(-10.0,-100.0,node_count,(|x| ei::convergent_ramanujan(x, 1024)));
+    let middle_positive = cheb::gen_chebyshev_approximator(0.01,10.0,node_count,(|x| ei::convergent_ramanujan(x, 1024)));
+    let middle_negative = cheb::gen_chebyshev_approximator(-0.01,-10.0,node_count,(|x| ei::convergent_ramanujan(x, 1024)));
+
+    let multi_approximator = move |x| -> f64{
+        if x < -10.0{
+            negative(x)
+        }else if x < 0.0{
+            middle_negative(x)
+        }else if x < 10.0{
+            middle_positive(x)
+        }else{
+            positive(x)
+        }
+    };
+    for i in 0..=2000{
+        let x = (i -1000) as f64/10.0;
+        let result = multi_approximator(x);
+
+        let result_err = (result-x).abs()/x;
+        // println!("{:#?},{:#?},{:#?},{:#?},{:#?},{:#?}", x, ei::convergent_ramanujan(x, 256),pos_err,neg_err,mpos_err,mneg_err);
+        println!("{:#?},{:#?},{:#?},{:#?}", x, ei::convergent_ramanujan(x, 256),result,result_err);
+    }
 }
 
 

@@ -3,6 +3,7 @@
 
 use super::consts;
 use super::ei;
+use super::errors;
 use std::f64;
 
 /// Uses standard converging series, see [here](https://en.wikipedia.org/wiki/Exponential_integral#Convergent_series)
@@ -84,11 +85,18 @@ pub fn continued_fraction(x:f64, max_n:u64) -> f64{
 /// ```
 /// let e1 = swammee_ohija(23.0);
 /// ```
-pub fn swammee_ohija(x:f64) -> f64{
+pub fn swammee_ohija(x:f64) -> Result<f64, errors::DomainError>{
+    if x < 0.0{
+        Err(errors::DomainError {
+            value: x,
+            min: 0.0,
+            max: std::f64::INFINITY,
+        })
+    }
     //TODO find a way to make this work for Ei, negative range not valid.
     let A = f64::ln(((0.56146/x + 0.65) * (1.0 + x)));
     let B = x.powi(4)* f64::exp(7.7*x) * (2.0+x).powf(3.7);
-    (A.powf(-7.7) + B).powf(-0.13)
+    Ok((A.powf(-7.7) + B).powf(-0.13))
 }
 
 
@@ -129,11 +137,20 @@ pub fn allen_hastings(x:f64) -> f64{
 /// ```
 /// let e1 = barry_et_al(23.0);
 /// ```
-pub fn barry_et_al(x:f64) -> f64{
+pub fn barry_et_al(x:f64) -> Result<f64, errors::DomainError>{
+    //TODO find a way to make this work for Ei, negative range not valid. 100% possible
+    //based on interpolating between standard divergent and convergent series for large and small values.
+    if x < 0.0{
+        Err(errors::DomainError {
+            value: x,
+            min: 0.0,
+            max: std::f64::INFINITY,
+        })
+    }
     let q = (20.0/47.0) * x.powf((31.0_f64/26.0).sqrt());
     let G = (-consts::EULER_MASCHERONI).exp();
     let b = ((2.0*(1.0 - G))/(G*(2.0 - G))).sqrt();
     let h_inf = ((1.0 - G) * (G*G - 6.0*G + 12.0))/(3.0*G * (2.0 - G).powi(2)*b);
     let h = (1.0/(1.0 + x * x.sqrt())) + (h_inf*q)/(1.0 +q);
-    ((-x).exp()/(G + (1.0 - G) * f64::exp(-x/(1.0-G)))) * f64::ln((1.0 + G/x - (1.0 - G)/(h + b*x).powi(2)).abs())
+    Ok(((-x).exp()/(G + (1.0 - G) * f64::exp(-x/(1.0-G)))) * f64::ln((1.0 + G/x - (1.0 - G)/(h + b*x).powi(2)).abs()))
 }
