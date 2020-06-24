@@ -1,4 +1,5 @@
 
+
 #![feature(const_generics)]
 #![feature(test)]
 // #![feature(fn_traits)]
@@ -15,6 +16,7 @@ mod cheb;
 mod ei;
 mod e1;
 mod erf;
+mod burmann;
 
 
 fn erf_0(x: f32) -> f32 {
@@ -112,7 +114,7 @@ fn main() {
         // ei_divergent_test[i] = ei::divergent_series(-30.0, (((i+1))+25) as u64);
         ei_divergent_test[i] = -ei::continued_fraction(-x2, 1023 as u64);
         ei_divergent_test2[i] = e1::continued_fraction(19.0, ((i+1)+40) as u64);
-        e1_swamee[i] = e1::swammee_ohija(x);
+        e1_swamee[i] = e1::swammee_ohija(x).unwrap();
         ei_swamee[i] = ei::convergent_ramanujan(x, 64);
     }
 
@@ -171,6 +173,9 @@ fn main() {
         // println!("{:#?},{:#?},{:#?},{:#?},{:#?},{:#?}", x, ei::convergent_ramanujan(x, 256),pos_err,neg_err,mpos_err,mneg_err);
         println!("{:#?},{:#?},{:#?},{:#?}", x, ei::convergent_ramanujan(x, 256),result,result_err);
     }
+
+    let ret = burmann::integer_partition_array(5);
+    println!("{:#?}", ret);
 }
 
 
