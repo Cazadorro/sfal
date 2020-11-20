@@ -13,11 +13,13 @@ use num::complex::{Complex32,Complex64};
 mod consts;
 mod errors;
 mod cheb;
+mod burmann;
 mod ei;
 mod e1;
 mod erf;
-mod burmann;
-
+mod erfc;
+mod erfcinv;
+mod erfinv;
 
 fn erf_0(x: f32) -> f32 {
     let x = x.abs();
@@ -35,15 +37,98 @@ fn erf_0(x: f32) -> f32 {
     return 1_f32 - (1_f32 / denominator);
 }
 
-#[cfg(test)]
-mod tests{
-    use super::*;
-    use test::Bencher;
+// #[cfg(test)]
+// mod tests{
+//     use super::*;
+//     use test::Bencher;
+//
+//     #[bench]
+//     fn bench_stuff(b: &mut Bencher){
+//         b.iter(|| Ei_series(24.345, 28));
+//     }
+// }
 
-    #[bench]
-    fn bench_stuff(b: &mut Bencher){
-        b.iter(|| Ei_series(24.345, 28));
-    }
+fn create_cos(node_count:u64, divider:f64) -> impl Fn(f64) -> f64{
+    let eighth_circle = f64::consts::PI/4.0;
+    let quarter_circle = f64::consts::PI/2.0;
+    let small_angle = 0.0000;
+    let cos_gen = cheb::gen_chebyshev_approximator(small_angle, 1.0/divider, node_count, (|x| f64::cos(x*f64::consts::PI)));
+    let approximator = move |x: f64| -> f64{
+        let x = if x < 0.0 { -x }else{ x };
+        if x < small_angle{
+            1.0 - (x*x)/2.0
+        }else{
+            cos_gen(x/f64::consts::PI)
+        }
+        // let x = if x < 0.0 { -x }else{ x };
+        // let x = x % 2.0*f64::consts::PI;
+        // let x = if x > f64::consts::PI { 2.0*f64::consts::PI  - x } else { x };
+        // let invert_output = x > quarter_circle;
+        // if x > eighth_circle {
+        //     let x = 2.0* eighth_circle - x;
+        //     let y = 1.0 - cos_gen(x);
+        //     if invert_output{
+        //         -y
+        //     }else{
+        //         y
+        //     }
+        //
+        // }else {
+        //     let y = cos_gen(x);
+        //     if invert_output{
+        //         -y
+        //     }else{
+        //         y
+        //     }
+        // }
+    };
+    approximator
+}
+
+fn bhaskara(x:f64)->f64{
+    ((f64::consts::PI.powi(2) - 4.0 * x.powi(2))/(f64::consts::PI.powi(2) + x.powi(2)))
+}
+fn test(x:bool, f: fn(bool) -> bool) -> bool{
+    f(x)
+}
+
+fn create_cos2(node_count:u64, divider:f64) -> impl Fn(f64) -> f64{
+    let eighth_circle = f64::consts::PI/4.0;
+    let quarter_circle = f64::consts::PI/2.0;
+    let small_angle = 0.1;
+    let cos_gen = cheb::gen_chebyshev_approximator(small_angle, 1.0/divider, node_count, (|x|  (f64::cos(x) - bhaskara(x))));
+    let approximator = move |x: f64| -> f64{
+        let x = if x < 0.0 { -x }else{ x };
+        if x < small_angle{
+            1.0 - (x*x)/2.0
+        }else{
+            bhaskara(x) + cos_gen(x)
+        }
+
+        // cos_gen(x/f64::consts::PI)
+        // let x = if x < 0.0 { -x }else{ x };
+        // let x = x % 2.0*f64::consts::PI;
+        // let x = if x > f64::consts::PI { 2.0*f64::consts::PI  - x } else { x };
+        // let invert_output = x > quarter_circle;
+        // if x > eighth_circle {
+        //     let x = 2.0* eighth_circle - x;
+        //     let y = 1.0 - cos_gen(x);
+        //     if invert_output{
+        //         -y
+        //     }else{
+        //         y
+        //     }
+        //
+        // }else {
+        //     let y = cos_gen(x);
+        //     if invert_output{
+        //         -y
+        //     }else{
+        //         y
+        //     }
+        // }
+    };
+    approximator
 }
 fn main() {
     println!("{}", erf_0(3.0));
@@ -176,6 +261,44 @@ fn main() {
 
     let ret = burmann::integer_partition_array(5);
     println!("{:#?}", ret);
+
+    let ret2 = burmann::integer_partition(5);
+    println!("{:#?}", ret2);
+
+    let mut array = vec![0.0; 10];
+    array[0] = 1.0;
+    for i in 1..10{
+        if i & 1 == 0 {
+            let n2 = i;
+            let n = i/2;
+            let sign = if n & 1 == 0{
+                1.0
+            }else{
+                -1.0
+            };
+            array[i as usize] = 2.0 * sign * (burmann::factorial(n2 - 1) as f64)/(burmann::factorial(n - 1) as f64);
+        }else{
+            array[i as usize] = 0.0;
+        }
+    }
+    let bc = burmann::calc_burmann_coefficent(1.0, &array, 2, 1);
+
+    let divider = 4.0;
+    let node_count = 16;
+    let cos_approx = create_cos(node_count, divider);
+    let cos_approx2  = create_cos2(node_count, divider);
+
+    const VALUE_LEN:i64 = 17;
+    const half_len:i64 = VALUE_LEN/2;
+    for i in 0..VALUE_LEN{
+        let ix = (i - half_len) as f64;
+        let ix = (ix/(divider*half_len as f64));
+        let appx = cos_approx(ix * f64::consts::PI);
+        let real = f64::cos(ix * f64::consts::PI);
+        let appx = cos_approx2(ix * f64::consts::PI);
+        println!("#PI*{}, {} vs {} diff {}", ix, appx, real, appx - real);
+    }
+    // println!("{}", bc);
 }
 
 

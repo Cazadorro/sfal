@@ -5,7 +5,7 @@
 
 Crate that implements **multiple approximations** for
 
-- [tgamma] gamma function
+- [tgamma] true gamma function
 - [lgamma] ln(tgamma(x))
 - [erf] error function
 - [erfc] complementary error function
