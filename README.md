@@ -1,7 +1,7 @@
-#SFAL *Special Function Approximation Library*
+# SFAL *Special Function Approximation Library*
 
 
-##Summary
+## Summary
 
 Crate that implements **multiple approximations** for
 
