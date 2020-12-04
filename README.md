@@ -5,8 +5,8 @@
 
 Crate that implements **multiple approximations** for
 
-- [tgamma] true gamma function
-- [lgamma] ln(tgamma(x))
+- [tgamma] true gamma function (not implimented)
+- [lgamma] ln(tgamma(x)) (not implimented)
 - [erf] error function
 - [erfc] complementary error function
 - [erfinv] inverse error function
