@@ -20,14 +20,14 @@ in addition to:
  
 entirely in rust.  
 
-##Why?
+## Why?
 
 Most crates, or even libraries outside of rust, that implement ei, or e1 don't do it over the whole numeric range (this effectively does).
 Most crates either give you the most accurate implementation possible, or a very inaccurate but very fast approximation, or worse, a combination of both. 
 
 This gives you every approximation I could find and at least understand enough to implement here. 
 
-##Future
+## Future
 
 every single one of these function needs to still be implemented (except expint)
 https://en.cppreference.com/w/cpp/numeric/special_functions
